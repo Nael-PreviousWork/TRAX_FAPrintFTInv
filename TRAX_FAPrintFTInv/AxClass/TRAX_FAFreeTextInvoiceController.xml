@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>TRAX_FAFreeTextInvoiceController</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+public class TRAX_FAFreeTextInvoiceController 
+{
+    
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>main</Name>
+				<Source><![CDATA[
+    public static void main(Args _args)
+    {
+        TRAX_FAFreeTextInvoiceController controller = new TRAX_FAFreeTextInvoiceController();
+        RecordSortedList journalList;
+        CustInvoiceJour custInvoiceJour;
+
+        journalList = _args.record() ? FormLetter::createJournalListCopy(_args.record()) : _args.object();
+        
+        boolean recExists = journalList.first(custInvoiceJour);
+
+        while (recExists)
+        {
+            info(strFmt("Printing %1", custInvoiceJour.InvoiceId));
+            controller.printToFile(custInvoiceJour);
+
+            recExists = journalList.next(custInvoiceJour);
+        }
+       
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>printToFile</Name>
+				<Source><![CDATA[
+    public void printToFile(CustInvoiceJour _custInvoiceJour)
+    {
+
+        Args args = new Args();
+        args.record(_custInvoiceJour);
+
+        FreeTextInvoiceController controller = new FreeTextInvoiceController();
+        
+        // TODO: (2) Change the name SSRS Report Design if needed.
+        controller.parmReportName(PrintMgmtDocType::construct(PrintMgmtDocumentType::SalesFreeTextInvoice).getDefaultReportFormat());
+        controller.parmArgs(args);
+        
+        FreeTextInvoiceContract rdpContract = controller.parmReportContract().parmRdpContract();
+        rdpContract.parmCustInvoiceJourRecId(_custInvoiceJour.RecId);
+        rdpContract.parmCountryRegionISOCode(SysCountryRegionCode::countryInfo());
+        
+        SRSPrintDestinationSettings pds = controller.parmReportContract().parmPrintSettings();
+        pds.printMediumType(SRSPrintMediumType::File);// ::GenerateDataSource_DC);
+        pds.fileFormat(SRSReportFileFormat::PDF);
+        pds.filename(_custInvoiceJour.InvoiceId + '.PDF');
+        pds.overwriteFile(true);
+
+        SalesFormLetter_FreeText salesFormLetter = SalesFormLetter::construct(DocumentStatus::FreeTextInvoice);
+        salesFormLetter.proforma(false);
+        salesFormLetter.usePrintManagement(false);
+        salesFormLetter.parmUseUserDefinedDestinations(true);
+        salesFormLetter.updatePrinterSettingsFormLetter(controller.parmReportContract().parmPrintSettings().pack(), PrintSetupOriginalCopy::Original);
+
+        args.caller(salesFormLetter);
+        args.parmEnumType(enumNum(PrintCopyOriginal));
+        args.parmEnum(PrintCopyOriginal::Original);
+
+        controller.parmExecutionMode(SysOperationExecutionMode::Synchronous);
+        controller.parmShowDialog(false);
+        controller.startOperation();
+        sleep(1000);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>main_OLD</Name>
+				<Source><![CDATA[
+    public static void main_OLD(Args _args)
+    {
+        //<GEEPL>
+        #ISOCountryRegionCodes
+        RecordSortedList journalList;
+        CustInvoiceJour custInvoiceJour;
+        CustInvoiceDuplicateTable_W custInvoiceDuplicateTable;
+        //</GEEPL>
+        FreeTextInvoiceController controller = new FreeTextInvoiceController();
+        // <GTE>
+        Common common;
+        // </GTE>
+
+        //if (!FeatureStateProvider::isFeatureEnabled(FreeTextInvoiceERFormatUseRDPModelMappingEnableFeature::instance()) &&
+        //    !NonSSRSPrintMgmtAdapter::runPrintMgmtNonSSRS(
+        //         PrintMgmtDocumentType::SalesFreeTextInvoice,
+        //         _args))
+        //{
+        //    return;
+        //}
+
+        controller.originalArgs = _args;
+
+        // <GEEPL>
+        if (SysCountryRegionCode::isLegalEntityInCountryRegion([#isoPL]))
+        {
+            if (_args.dataset() == tableNum(CustInvoiceDuplicateTable_W))
+            {
+                custInvoiceDuplicateTable = _args.record();
+                _args.record(custInvoiceDuplicateTable.custInvoiceJour());
+                controller.parmDuplicateInvoiceRecId(custInvoiceDuplicateTable.RecId);
+            }
+
+            switch (custInvoiceJour.custInvoiceJour_PL().FiscalDocState_PL)
+            {
+                case PlFiscalDocState::FiscalDocument:
+                    try
+                    {
+                        PlFiscalPrinterHandling::generateFiscalDoc(custInvoiceJour);
+                        return;
+                    }
+                    catch
+                    {
+                        // Allow execution to continue of PlFiscalPrinterHandling throws an error
+                        return;
+                    }
+                case PlFiscalDocState::PrintedFiscalDocument:
+                    info("@GLS110142");
+                    return;
+                default:
+                    break;
+            }
+        }
+        // </GEEPL>
+
+        //<GMX>
+        if (EInvoiceParameters_MX::isElectronicInvoiceEnabled()
+         && EInvoiceFreeTextController_MX::hasEInvoice(_args))
+        {
+            EInvoiceFreeTextController_MX::main(_args);
+            return;
+        }
+        //</GMX>
+
+        journalList = _args.record() ? FormLetter::createJournalListCopy(_args.record()) : _args.object();
+        journalList.first(custInvoiceJour);
+
+        // <GTH>
+        if (!CustInvoiceJourExtensionTH::canInvoiceBePrinted(_args))
+        {
+            return;
+        }
+
+        // print document set
+        if (TaxThaiGovCertificationFeatureChecker::isUnrealizedVATEnabled()
+            && _args.parmEnum() != PrintCopyOriginal::OriginalPrint)
+        {
+            FreeTextInvoiceController::printDocumentSet(_args);
+        }
+        else
+        {
+            // </GTH>
+            // <GTE><GIN>
+            journalList = _args.record() ? FormLetter::createJournalListCopy(_args.record()) : _args.object();
+            journalList.first(custInvoiceJour);
+
+            //common = controller.getTaxDocumentSourceTable(custInvoiceJour);
+
+            //if (TaxGSTInvoiceHelper_IN::isGSTInvoice(common))
+            //{
+            //    controller.parmIsGSTInvoice_IN(true);
+            //    controller.parmCustInvoice_IN(common);
+            //}
+            // </GTE></GIN>
+
+            controller.parmReportName(controller.getReportName(common));
+            controller.parmArgs(_args);
+            
+            controller.parmShowDialog(false);
+
+            ///////////////////////////////////////
+            
+            controller.parmLoadFromSysLastValue(false);
+            // Provide printer settings
+            SRSPrintDestinationSettings settings = new SRSPrintDestinationSettings();
+            settings.printMediumType(SRSPrintMediumType::File);
+            SRSPrintMedium fileMedium = new SRSPrintMedium();
+
+            settings.printMedium(fileMedium);
+            settings.fileName('aaa.pdf');
+            settings.fileFormat(SRSReportFileFormat::PDF);
+            
+            controller.parmReportContract().parmPrintSettings(settings);
+            ///////////////////////////////////////
+         
+
+            //if (_args.parmObject()
+            //    && _args.parmObject() is CustInvoiceControllerFileURLsCollectionIdProvider)
+            //{
+            //    CustInvoiceControllerFileURLsCollectionIdProvider fileURLsCollectionIdProvider = _args.parmObject() as CustInvoiceControllerFileURLsCollectionIdProvider;
+            //    controller.parmFileURLsCollectionId(fileURLsCollectionIdProvider.getFileURLsCollectionId());
+            //}
+
+            controller.startOperation();
+            // <GTH>
+        }
+        // </GTH>
+
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

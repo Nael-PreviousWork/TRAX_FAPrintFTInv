@@ -1,0 +1,12 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/bin
+/.vs/TRAX_FAPrintFTInv/CopilotIndices/17.12.53.23981
+/BuildModelResult.log
+/BuildModelResult.xml
+/BuildProjectResult.err.xml
+/BuildProjectResult.log
+/BuildProjectResult.xml
+/XppMetadata/TRAX_FAPrintFTInv/AxClass
