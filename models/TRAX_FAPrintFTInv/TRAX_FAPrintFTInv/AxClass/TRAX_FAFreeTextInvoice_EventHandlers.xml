@@ -6,33 +6,10 @@
 internal final class TRAX_FAFreeTextInvoice_EventHandlers
 {
 
+
 }
 ]]></Declaration>
 		<Methods>
-			<Method>
-				<Name>TRAX_FAPrintButton_OnClicked</Name>
-				<Source><![CDATA[
-    /// <summary>
-    ///
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    [FormControlEventHandler(formControlStr(CustFreeInvoice, TRAX_FAPrintButton), FormControlEventType::Clicked)]
-    public static void TRAX_FAPrintButton_OnClicked(FormControl sender, FormControlEventArgs e)
-    {
-        CustInvoiceTable custInvoiceTable = sender.formRun().dataSource('CustInvoiceTable').cursor();
-        CustInvoiceJour custInvoiceJour;
-
-        select firstonly *
-            from custInvoiceJour
-            where custInvoiceJour.InvoiceId == custInvoiceTable.InvoiceId;
-        
-        TRAX_FAFreeTextInvoice_EventHandlers obj = new TRAX_FAFreeTextInvoice_EventHandlers();
-        obj.printToFile(custInvoiceJour);
-    }
-
-]]></Source>
-			</Method>
 			<Method>
 				<Name>printToMemoryStream</Name>
 				<Source><![CDATA[
