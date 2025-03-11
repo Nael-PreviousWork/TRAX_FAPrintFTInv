@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Diagnostics
+  GenerationTime="2025-03-06T07:51:54.6775894+00:00">
+  <Items>
+    <Diagnostic>
+      <DiagnosticType>Compile</DiagnosticType>
+      <Severity>Error</Severity>
+      <Path>dynamics://Class/TRAX_FAFreeTextInvoiceController/Method/main</Path>
+      <ElementType>Class Method</ElementType>
+      <Moniker>ParameterMissing</Moniker>
+      <Line>19</Line>
+      <Column>17</Column>
+      <EndLine>19</EndLine>
+      <EndColumn>65</EndColumn>
+      <Message>'Box.yesNo' is missing argument 2 of type 'Enumeration(DialogButton)'.</Message>
+    </Diagnostic>
+  </Items>
+  <Aliases />
+</Diagnostics>

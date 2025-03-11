@@ -26,8 +26,14 @@ public class TRAX_FAFreeTextInvoiceController
         {
             info(strFmt("Printing %1", custInvoiceJour.InvoiceId));
             controller.printToFile(custInvoiceJour);
-
+            
             recExists = journalList.next(custInvoiceJour);
+            sleep(3000);
+            //if (!recExists ||
+            //    Box::yesNo("Do you want to print next invoice?", DialogButton::Yes) == DialogButton::No)
+            //{
+            //    recExists = false;
+            //}
         }
        
     }
@@ -72,7 +78,50 @@ public class TRAX_FAFreeTextInvoiceController
         controller.parmExecutionMode(SysOperationExecutionMode::Synchronous);
         controller.parmShowDialog(false);
         controller.startOperation();
-        sleep(1000);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>printToMemoryStream</Name>
+				<Source><![CDATA[
+    public void printToMemoryStream(CustInvoiceJour _custInvoiceJour)
+    {
+        Args args = new Args();
+        FreeTextInvoiceController controller = new FreeTextInvoiceController();
+    
+        // Set the SalesFreeTextInvoice.Report as SSRS Report Design.
+        controller.parmReportName(PrintMgmtDocType::construct(PrintMgmtDocumentType::SalesFreeTextInvoice).getDefaultReportFormat());
+ 
+        // In order to have the context table we need to set args.record().
+        // We will just select the first posted invoice.
+        args.record(_custInvoiceJour);
+ 
+        // Set the report data contract with parameters.
+        FreeTextInvoiceContract contract = controller.parmReportContract().parmRdpContract();
+        contract.parmCustInvoiceJourRecId(_custInvoiceJour.RecId);
+ 
+        DocSrsReportGenerator reportGenerator = new DocSrsReportGenerator(controller);
+        reportGenerator.setPrintDestinationSettings_SsrsReport(SRSReportFileFormat::PDF);
+ 
+        // NOTE: If you want to generate the report using a Docentric template, use this line of code instead.
+        // reportGenerator.setPrintDestinationSettings_DocentricReport(DocOutputFileFormat::PDF);
+ 
+        // Initalize SalesFormLetter_FreeText class instance because there is no other way
+        // NOT to use Print Management.
+        SalesFormLetter_FreeText salesFormLetter = SalesFormLetter_FreeText::newFreeText();
+        salesFormLetter.printFormLetter(NoYes::Yes);
+        salesFormLetter.usePrintManagement(false);
+        salesFormLetter.parmUseUserDefinedDestinations(true);
+        salesFormLetter.updatePrinterSettingsFormLetter(controller.parmReportContract().parmPrintSettings().pack());
+ 
+        args.caller(salesFormLetter);
+        args.parmEnumType(enumNum(PrintCopyOriginal));
+        args.parmEnum(PrintCopyOriginal::OriginalPrint);
+        controller.parmArgs(args);
+          
+        // Start the report execution and wait until the report content is not generated.
+        container generatedInvoice = reportGenerator.generateReport();
     }
 
 ]]></Source>

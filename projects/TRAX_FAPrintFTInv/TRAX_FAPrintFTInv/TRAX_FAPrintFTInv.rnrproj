@@ -33,7 +33,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="Classes\" />
-    <Folder Include="Form Extensions\" />
     <Folder Include="Output Menu Item Extensions\" />
   </ItemGroup>
   <ItemGroup>
@@ -41,16 +40,6 @@
       <SubType>Content</SubType>
       <Name>TRAX_FAFreeTextInvoiceController</Name>
       <Link>Classes\TRAX_FAFreeTextInvoiceController</Link>
-    </Content>
-    <Content Include="AxClass\TRAX_FAFreeTextInvoice_EventHandlers">
-      <SubType>Content</SubType>
-      <Name>TRAX_FAFreeTextInvoice_EventHandlers</Name>
-      <Link>Classes\TRAX_FAFreeTextInvoice_EventHandlers</Link>
-    </Content>
-    <Content Include="AxFormExtension\CustFreeInvoice.TRAX_FAPrintFTInv">
-      <SubType>Content</SubType>
-      <Name>CustFreeInvoice.TRAX_FAPrintFTInv</Name>
-      <Link>Form Extensions\CustFreeInvoice.TRAX_FAPrintFTInv</Link>
     </Content>
     <Content Include="AxMenuItemOutputExtension\FreeTextInvoice.TRAX_FAPrintFTInv">
       <SubType>Content</SubType>
